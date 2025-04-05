@@ -136,11 +136,12 @@ export async function POST(request: Request) {
             username: user.username,
             email: user.email,
         };
+        const userDetails = {
+            id: user._id.toString()
+        }
 
         // Generate JWT token
-        const token = jwt.sign(tokenDetails, process.env.JWT_SECRET!, { 
-            expiresIn: '10h' // Add token expiration
-        });
+        const token = jwt.sign(tokenDetails, process.env.JWT_SECRET!);
 
         // Set cookie with user details
         const cookieStore = await cookies();
@@ -149,6 +150,12 @@ export async function POST(request: Request) {
             sameSite: "strict",
             path:"/",
             maxAge: 36000 // 10 hour expiration
+        });
+
+        cookieStore.set("user", JSON.stringify(userDetails), {
+            httpOnly:  false,
+            sameSite: "strict",
+            path:"/",
         });
 
         // Return success response

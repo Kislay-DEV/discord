@@ -5,6 +5,7 @@ type Options = {
   uniqueTokenPerInterval?: number;
   interval?: number; // in milliseconds
   namespace?: string; // for multi-route differentiation
+  ip?: string;
 };
 
 export default function rateLimit(options?: Options) {
