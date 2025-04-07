@@ -101,6 +101,7 @@ export async function POST(request: NextRequest) {
         roles: [],
         joinedAt: new Date()
       }],
+      invites: [] ,
       settings: {
         defaultPermissions: '0',
         verificationLevel: 'NONE',

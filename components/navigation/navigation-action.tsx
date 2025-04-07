@@ -3,8 +3,10 @@ import React from 'react'
 import { Plus } from 'lucide-react'
 
 import { ActionTooltip } from '@/components/action-tooltip'
+import { useModal } from '@/hooks/use-model-store'
 
 export default function NavigationAction() {
+  
   return (
     <div>
     <ActionTooltip label="Add a server" side="right" align="center">

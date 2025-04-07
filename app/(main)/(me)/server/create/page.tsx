@@ -34,7 +34,7 @@ export default function App() {
 
   const onSubmit = async (data: Inputs) => {
     try{
-    const response = await axios.post("/api/admin/server-create", data)
+    const response = await axios.post("/api/admin/server/create", data)
     const serverId = response.data.id
     if (response.status === 201) {
       alert("Server created successfully")

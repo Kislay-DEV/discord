@@ -21,7 +21,7 @@ export const ActionTooltip = ({ children, label, side = "top", align = "center" 
                 <TooltipTrigger asChild>
                         {children}
                 </TooltipTrigger>
-                <TooltipContent side={side} align={align} className="w-fit">
+                <TooltipContent side={side} align={align} className="w-fit bg-black text-white">
                     <p className="text-sm font-semibold capitalize">
 
                     </p>

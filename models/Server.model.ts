@@ -62,6 +62,7 @@ const MemberSchema = new Schema({
 const InviteSchema = new Schema({
   code: {
     type: String,
+    required: true
   },
   creator: {
     type: mongoose.Schema.Types.ObjectId,
@@ -161,7 +162,7 @@ const ServerSchema: Schema<IServer> = new mongoose.Schema({
 ServerSchema.index({ name: 1 });
 ServerSchema.index({ owner: 1 });
 ServerSchema.index({ "members.user": 1 });
-ServerSchema.index({ "invites.code": 1 });
+ServerSchema.index({ "invites.code": 1 }, { unique: true, sparse: true });
 
 // Virtual for getting member count
 ServerSchema.virtual('memberCount').get(function() {
