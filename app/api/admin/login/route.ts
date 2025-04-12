@@ -149,7 +149,6 @@ export async function POST(request: Request) {
             httpOnly: true, 
             sameSite: "strict",
             path:"/",
-            maxAge: 36000 // 10 hour expiration
         });
 
         cookieStore.set("user", JSON.stringify(userDetails), {

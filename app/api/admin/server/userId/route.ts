@@ -12,22 +12,23 @@ export async function GET(request: NextRequest) {
         const userId = user?.id;
 
         if (!userId) {
+            console.error("Unauthorized: User ID not found"); // Debugging log
             return NextResponse.json(
                 { error: "Unauthorized: User ID not found" },
                 { status: 401 }
             );
         }
-        console.log(userId)
 
-        // Find servers where the userId is in the members array
+        console.log("Fetching servers for userId:", userId); // Debugging log
         const servers = await Server.find({ "members.user": userId });
-        console.log(servers)
+        console.log("Servers found:", servers); // Debugging log
+
         return NextResponse.json(
             { servers },
             { status: 200 }
         );
     } catch (error) {
-        console.error("Error fetching servers:", error);
+        console.error("Error fetching servers:", error); // Log detailed error
         return NextResponse.json(
             { error: "Internal Server Error" },
             { status: 500 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Server from "@/models/Server.model";
+import Role from "@/models/Role.model";
 import { connect } from "@/lib/DB_Connect";
 import mongoose from "mongoose";
 import { cookies } from "next/headers";
@@ -22,7 +23,14 @@ interface IServerResponse {
   updatedAt: Date;
   memberCount: number;
   template: string;
+  adminRole: {
+    id: string;
+    name: string;
+  };
 }
+
+// Define admin permissions - full access
+const ADMIN_PERMISSIONS = '2199023255551'; // Represents all permission bits set to 1
 
 export async function POST(request: NextRequest) {
   await connect();
@@ -42,7 +50,6 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-
 
     // Validate inputs
     if (!name || !imageUrl) {
@@ -91,17 +98,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create server with default settings
+    // Create server with default settings first
     const server = await Server.create({
       name,
       imageUrl,
       owner: ownerId,
       members: [{
         user: ownerId,
-        roles: [],
+        roles: [], // We'll update this after creating the admin role
         joinedAt: new Date()
       }],
-      invites: [] ,
+      invites: [],
       settings: {
         defaultPermissions: '0',
         verificationLevel: 'NONE',
@@ -110,6 +117,22 @@ export async function POST(request: NextRequest) {
       template,
       categories: template !== 'CUSTOM' ? getDefaultCategories(template) : []
     });
+    
+    // Now create admin role
+    const adminRole = await Role.create({
+      name: 'Admin',
+      server: server._id,
+      color: '#e91e63', // Admin pink color
+      permissions: ADMIN_PERMISSIONS,
+      position: 1, // Highest position
+      hoist: true, // Display separately in member list
+      mentionable: true
+    });
+
+    // Update server to include the role and update owner's roles
+    server.roles.push(adminRole._id);
+    server.members[0].roles.push(adminRole._id);
+    await server.save();
 
     // Prepare sanitized response
     const response: IServerResponse = {
@@ -120,7 +143,11 @@ export async function POST(request: NextRequest) {
       createdAt: server.createdAt,
       updatedAt: server.updatedAt,
       memberCount: server.members.length,
-      template: server.template
+      template: server.template,
+      adminRole: {
+        id: adminRole._id.toString(),
+        name: adminRole.name
+      }
     };
 
     return NextResponse.json(response, { status: 201 });

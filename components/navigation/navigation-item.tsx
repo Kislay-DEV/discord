@@ -27,7 +27,7 @@ export default function NavigationItem({
     }
   return (
     <ActionTooltip side="right" label={name} align='center'>
-        <button onClick={onClick} className='group relative flex items-center' title={name}>
+        <button onClick={onClick} className='group relative flex items-center mb-4' title={name}>
 
         <div className={cn(
             "absolute left-0 bg-primary rounded-r-full transition-all w-[4px]",
@@ -36,7 +36,7 @@ export default function NavigationItem({
         )}/>
         <div className={cn(
             "relatetive group flex mx-3 h-[48px] w-[48px] rounded-[24px] group-hover:rounded-[16px] transition-all overflow-hidden",
-            params?.serverId === id && "bg-primary/10 text-primary rounded-[16px]",
+            params?.serverId === id && "bg-primary/10 text-primary rounded-[16px] ",
         )}>
             <div className="relative h-full w-full">
                 <Image

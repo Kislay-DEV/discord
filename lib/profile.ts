@@ -1,25 +1,25 @@
-import axios from "axios"
 import { cookies } from "next/headers"
 import jwt from "jsonwebtoken"
+import User from "@/models/User.model"
 
 const Profile = async () => {
     try {
         const cookieStore = await cookies()
         const token = cookieStore.get("token")?.value
+        const user = cookieStore.get("user")?.value
 
         if (!token) {
             throw new Error("Token is undefined or missing");
         }
 
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET as string) as jwt.JwtPayload & { userId?: string };
+        const decodedToken = jwt.verify(token, process.env.JWT_SECRET as string) as jwt.JwtPayload & { id?: string };
 
-        if (!decodedToken.userId) {
+        if (!decodedToken.id) {
             throw new Error("Decoded token does not contain userId");
         }
-        const userId = decodedToken.userId
-        const response = await axios.get(`/app/api/admin/server/${userId}`)
-        const server = response.data.server
-        return server
+        const userId = decodedToken.id
+        const UserDB = await User.findById(userId)
+        return UserDB
     } catch (error) {
         console.error("Error fetching user data:", error)
         return null
