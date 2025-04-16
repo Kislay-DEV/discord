@@ -63,7 +63,8 @@ const InviteSchema = new Schema({
   code: {
     type: String,
     required: true,
-    unique: true // Ensure uniqueness
+    unique: true,
+    sparse: true // Add sparse index to allow multiple null values
   },
   creator: {
     type: mongoose.Schema.Types.ObjectId,
@@ -139,7 +140,7 @@ const ServerSchema: Schema<IServer> = new mongoose.Schema({
   categories: [CategorySchema],
   invites: {
     type: [InviteSchema],
-    default: undefined // Don't create empty array by default
+    default: [] // Change to empty array default instead of undefined
   },
   settings: {
     type: ServerSettingsSchema,

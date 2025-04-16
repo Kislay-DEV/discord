@@ -8,6 +8,7 @@ export interface IPermissionOverwrite {
 }
 
 export interface IRole extends Document {
+  user: mongoose.Schema.Types.ObjectId;
   name: string;
   server: mongoose.Schema.Types.ObjectId;
   color: string;
@@ -42,6 +43,11 @@ const PermissionOverwriteSchema = new Schema({
 });
 
 const RoleSchema: Schema<IRole> = new Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   name: {
     type: String,
     required: true,

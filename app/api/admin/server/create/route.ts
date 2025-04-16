@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import { cookies } from "next/headers";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import rateLimiter from "@/lib/rateLimit";
+import { v4 as uuidv4 } from "uuid"; // Add this import for generating unique invite codes
 
 // Type definitions
 interface IServerRequest {
@@ -27,10 +28,16 @@ interface IServerResponse {
     id: string;
     name: string;
   };
+  userRole: {
+    id: string;
+    name: string;
+  };
 }
 
 // Define admin permissions - full access
 const ADMIN_PERMISSIONS = '2199023255551'; // Represents all permission bits set to 1
+// Define default user permissions - basic access
+const USER_PERMISSIONS = '104324673'; // Basic permissions for regular users
 
 export async function POST(request: NextRequest) {
   await connect();
@@ -98,59 +105,104 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create server with default settings first
-    const server = await Server.create({
-      name,
-      imageUrl,
-      owner: ownerId,
-      members: [{
-        user: ownerId,
-        roles: [], // We'll update this after creating the admin role
-        joinedAt: new Date()
-      }],
-      invites: [],
-      settings: {
-        defaultPermissions: '0',
-        verificationLevel: 'NONE',
-        isPrivate: false
-      },
-      template,
-      categories: template !== 'CUSTOM' ? getDefaultCategories(template) : []
-    });
-    
-    // Now create admin role
-    const adminRole = await Role.create({
-      name: 'Admin',
-      server: server._id,
-      color: '#e91e63', // Admin pink color
-      permissions: ADMIN_PERMISSIONS,
-      position: 1, // Highest position
-      hoist: true, // Display separately in member list
-      mentionable: true
-    });
+    // Start a session for transaction
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    // Update server to include the role and update owner's roles
-    server.roles.push(adminRole._id);
-    server.members[0].roles.push(adminRole._id);
-    await server.save();
+    try {
+      // Create server with default settings
+      const server = await Server.create([{
+        name,
+        imageUrl,
+        owner: ownerId,
+        members: [{
+          user: ownerId,
+          roles: [], // We'll add the admin role ID after creating it
+          joinedAt: new Date()
+        }],
+        invites: [{
+          code: uuidv4(), // Generate a unique invite code
+          creator: ownerId,
+          uses: 0,
+          maxUses: 0
+        }],
+        settings: {
+          defaultPermissions: '0',
+          verificationLevel: 'NONE',
+          isPrivate: false
+        },
+        template,
+        categories: template !== 'CUSTOM' ? getDefaultCategories(template) : []
+      }], { session });
+      
+      const createdServer = server[0];
 
-    // Prepare sanitized response
-    const response: IServerResponse = {
-      id: server._id.toString(),
-      name: server.name,
-      imageUrl: server.imageUrl,
-      ownerId: server.owner.toString(),
-      createdAt: server.createdAt,
-      updatedAt: server.updatedAt,
-      memberCount: server.members.length,
-      template: server.template,
-      adminRole: {
-        id: adminRole._id.toString(),
-        name: adminRole.name
-      }
-    };
+      // Create admin role
+      const adminRole = await Role.create([{
+        name: 'Admin',
+        server: createdServer._id,
+        color: '#e91e63', // Admin pink color
+        permissions: ADMIN_PERMISSIONS,
+        position: 1, // Highest position
+        hoist: true, // Display separately in member list
+        mentionable: true
+      }], { session });
 
-    return NextResponse.json(response, { status: 201 });
+      // Create default user role
+      const userRole = await Role.create([{
+        name: '@everyone',
+        server: createdServer._id,
+        color: '#99aab5', // Default gray color
+        permissions: USER_PERMISSIONS,
+        position: 0, // Lowest position
+        hoist: false,
+        mentionable: false
+      }], { session });
+
+      const createdAdminRole = adminRole[0];
+      const createdUserRole = userRole[0];
+
+      // Update server to include both roles
+      createdServer.roles.push(createdAdminRole._id, createdUserRole._id);
+      
+      // Update the owner's member entry to include both admin and user roles
+      createdServer.members[0].roles.push(createdAdminRole._id, createdUserRole._id);
+
+      // Mark the owner as an admin by assigning the admin role
+      createdServer.members[0].isAdmin = true; // Add this field to indicate admin status
+      
+      await createdServer.save({ session });
+
+      await session.commitTransaction();
+      session.endSession();
+
+      // Prepare sanitized response
+      const response: IServerResponse = {
+        id: createdServer._id.toString(),
+        name: createdServer.name,
+        imageUrl: createdServer.imageUrl,
+        ownerId: createdServer.owner.toString(),
+        createdAt: createdServer.createdAt,
+        updatedAt: createdServer.updatedAt,
+        memberCount: createdServer.members.length,
+        template: createdServer.template,
+        adminRole: {
+          id: createdAdminRole._id.toString(),
+          name: createdAdminRole.name
+        },
+        userRole: {
+          id: createdUserRole._id.toString(),
+          name: createdUserRole.name
+        }
+      };
+
+      return NextResponse.json(response, { status: 201 });
+    } catch (error) {
+      // Abort transaction in case of error
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
 
   } catch (error) {
     console.error("Server creation error:", error);
@@ -197,4 +249,4 @@ function getDefaultCategories(template: string): any[] {
   };
 
   return defaults[template] || [];
-}
+} 

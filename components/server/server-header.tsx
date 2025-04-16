@@ -11,7 +11,7 @@ export const ServerHeader = ({
   server,
   role,
 }: ServerHeaderProps) => {
-  const isAdmin = role?.name === "ADMIN";
+  const isAdmin = role?.name === "Admin"; // Changed from "ADMIN" to "Admin" to match our creation
   const isModerator = role?.name === "MODERATOR";
 
   return (
