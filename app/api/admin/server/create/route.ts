@@ -139,6 +139,7 @@ export async function POST(request: NextRequest) {
 
       // Create admin role
       const adminRole = await Role.create([{
+        user: ownerId,
         name: 'Admin',
         server: createdServer._id,
         color: '#e91e63', // Admin pink color
@@ -150,6 +151,7 @@ export async function POST(request: NextRequest) {
 
       // Create default user role
       const userRole = await Role.create([{
+        user:ownerId,
         name: '@everyone',
         server: createdServer._id,
         color: '#99aab5', // Default gray color
