@@ -44,6 +44,7 @@ const serverSettingsSchema = z.object({
 
 // Server Schema
 export const serverSchema = z.object({
+  _id: objectIdSchema,
   name: z.string().min(1).max(100).trim(),
   imageUrl: z.string().url({
     message: "Invalid URL format for server image"

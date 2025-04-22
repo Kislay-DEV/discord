@@ -5,7 +5,7 @@ import { connect } from "@/lib/DB_Connect"
 export async function GET(request: NextRequest, { params }: { params: { serverId: string } }) {
     await connect()
     try {
-        const {serverId} = params
+        const { serverId } = await params
         if (!serverId) {
             return NextResponse.json({error: "Server ID is required"}, {status: 400})
         }

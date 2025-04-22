@@ -73,14 +73,7 @@ export const ServerSidebar: React.FC<ServerSidebarProps> = ({ serverId, baseUrl 
   
   return (
     <div>
-      <h2>Server Sidebar</h2>
-      <p>Server ID: {serverId}</p>
-      <p>Server Name: {serverData.server.name}</p>
-      <p>Text Channels: {textChannels.length}</p>
-      <p>Audio Channels: {audioChannels.length}</p>
-      <p>Video Channels: {videoChannels.length}</p>
-      <p>Members: {members.length}</p>
-      <p>Role: {adminRole ? adminRole.name : "Member"}</p>
+     
       <ServerHeader 
         server={serverData.server}
         role={adminRole}
