@@ -1,7 +1,7 @@
 import {Server} from '@/schema/Server.schema';
 import {create} from 'zustand';
 
-export type ModalType = "createServer" | "invite" | "editServer";
+export type ModalType = "createServer" | "invite" | "editServer"| "members";
 
 
 interface ModalData {

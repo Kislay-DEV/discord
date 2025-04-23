@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import File from "@/components/file-upload";
 import { useModal } from "@/hooks/use-model-store"
+import { useEffect } from "react";
 
 type Inputs = {
   name: string;
@@ -21,10 +22,11 @@ type Inputs = {
 }
 
 export default function EditServer() {
-  const { isOpen, onClose, type } = useModal();
+  const { isOpen, onClose, type, data } = useModal();
   const router = useRouter();
 
-  const isModalOpen = isOpen && type === "createServer";
+  const isModalOpen = isOpen && type === "editServer";
+  const {server} = data
 
   const form = useForm<Inputs>({
     defaultValues: {
@@ -33,9 +35,16 @@ export default function EditServer() {
     }
   });
 
+  useEffect(()=>{
+    if(server){
+      form.setValue("name", server.name)
+      form.setValue("imageUrl", server.imageUrl)
+    }
+  },[server, form])
+
   const onSubmit = async (data: Inputs) => {
     try {
-      const response = await axios.post("/api/admin/server/create", data)
+      const response = await axios.patch(`/api/admin/server/${server?._id}/edit`, data)
       const serverId = response.data.id
       if (response.status === 201) {
         alert("Server created successfully")

@@ -1,9 +1,11 @@
 "use client"
-
 import React from 'react'
+
 import CreateServerModal from "@/components/modals/create-server-modal"
+
 import InviteModal from '../modals/invite-modal'
 import EditServer from '../modals/edit-server-modal'
+import MembersModal from '../modals/members-modal'
 
 export const ModalProvider = () => {
     const [isMounted , setIsMounted] = React.useState(false)
@@ -15,6 +17,8 @@ export const ModalProvider = () => {
     <>
       <CreateServerModal />
       <InviteModal/>
+      <EditServer/>
+      <MembersModal/>
     </>
   )
 }

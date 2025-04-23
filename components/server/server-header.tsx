@@ -60,27 +60,7 @@ export const ServerHeader = () => {
   const adminRole = roles.find((role) => role.name === "Admin");
   const everyoneRole = roles.find((role) => role.name === "@everyone");
 
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
-  console.log(server)
+ 
 
   if (!serverId) {
     return <p>Server ID is missing. Unable to fetch roles.</p>;
@@ -110,13 +90,16 @@ export const ServerHeader = () => {
       </DropdownMenuItem>
     )}
     {adminRole &&(
-      <DropdownMenuItem className=" px-3 py-3 text-sm cursor-pointer">
+      <DropdownMenuItem className=" px-3 py-3 text-sm cursor-pointer"
+      onClick={()=>onOpen("editServer",{server})}
+      >
         Server Settings
         <Settings className="h-4 w-4 ml-auto"/>
       </DropdownMenuItem>
     )}
     {adminRole &&(
-      <DropdownMenuItem className=" px-3 py-3 text-sm cursor-pointer">
+      <DropdownMenuItem className=" px-3 py-3 text-sm cursor-pointer"
+      onClick={()=> onOpen("members",{server})}>
         Manage Members
         <Users className="h-4 w-4 ml-auto"/>
       </DropdownMenuItem>
