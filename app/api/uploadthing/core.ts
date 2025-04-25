@@ -49,7 +49,15 @@ export const ourFileRouter ={
       }),
       messageFile:f(["image", "pdf"])
       .middleware(()=>handleAuth())
-      .onUploadComplete(()=>{})
+      .onUploadComplete(()=>{}),
+      Avatar:f({ image:{maxFileCount:1, maxFileSize:"4MB"}})
+      .middleware(()=>handleAuth())
+      .onUploadComplete(async ({ metadata, file }) => {
+        console.log("Upload complete for userId:", metadata.userId);
+        console.log("File URL:", file.url); // Changed from ufsUrl to url
+
+        return { uploadedBy: metadata.userId };
+      })
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

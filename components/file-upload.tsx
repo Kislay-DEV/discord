@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 interface FileUploadProps {
   onchange: (url?: string) => void;
   value?: string;
-  endpoint: "messageFile" | "serverImage";
+  endpoint: "messageFile" | "serverImage" | "Avatar";
 }
 
 export default function File({

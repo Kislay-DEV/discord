@@ -11,7 +11,7 @@ const dashboardLimiter = rateLimit({
   uniqueTokenPerInterval: 1000, // Max 1000 users per minute
 });
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   await connect();
   
   try {
@@ -19,27 +19,30 @@ export async function GET(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     await dashboardLimiter.check(30, ip); // Allow 30 requests per minute per IP
 
+    const {Avatar} = await request.json();
+
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
 
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    } 
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    if (!decodedToken) {
+      return NextResponse.json("Token is not valid", {status:404})
     }
+    const user = await User.findById(decodedToken.id)
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-
-    if (!decoded || typeof decoded === "string" || !decoded.id) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
-    }
-
-    const user = await User.findById(decoded.id).select('-password');
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 402 });
     }
+    
+    user.avatar = Avatar;
+    await user.save();
 
-    return NextResponse.json({ 
-      user
-    }, { status: 200 });
+    return NextResponse.json({ message: "Avatar updated successfully" }, { status: 200 });
+
+    
   } catch (error: any) {
     if (error instanceof Error && error.message === 'Rate limit exceeded') {
       return NextResponse.json(

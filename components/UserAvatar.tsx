@@ -3,6 +3,7 @@ import {Avatar, AvatarImage} from "@/components/ui/avatar";
 interface UserAvatarProps {
     src?:string;
     className?:string;
+    name?:string
 }
 
 export const UserAvatar= ({
@@ -10,8 +11,8 @@ export const UserAvatar= ({
     className
 }:UserAvatarProps) =>{
     return(
-        <Avatar className={className}>
-            <AvatarImage src={src}/>
+        <Avatar>
+            <AvatarImage src={src} className={className}/>
         </Avatar>
     )
 }
