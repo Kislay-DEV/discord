@@ -27,11 +27,7 @@ interface IServerResponse {
   adminRole: {
     id: string;
     name: string;
-  };
-  userRole: {
-    id: string;
-    name: string;
-  };
+  }
 }
 
 // Define admin permissions - full access
@@ -150,25 +146,10 @@ export async function POST(request: NextRequest) {
       }], { session });
 
       // Create default user role
-      const userRole = await Role.create([{
-        user:ownerId,
-        name: '@everyone',
-        server: createdServer._id,
-        color: '#99aab5', // Default gray color
-        permissions: USER_PERMISSIONS,
-        position: 0, // Lowest position
-        hoist: false,
-        mentionable: false
-      }], { session });
+     
 
       const createdAdminRole = adminRole[0];
-      const createdUserRole = userRole[0];
 
-      // Update server to include both roles
-      createdServer.roles.push(createdAdminRole._id, createdUserRole._id);
-      
-      // Update the owner's member entry to include both admin and user roles
-      createdServer.members[0].roles.push(createdAdminRole._id, createdUserRole._id);
 
       // Mark the owner as an admin by assigning the admin role
       createdServer.members[0].isAdmin = true; // Add this field to indicate admin status
@@ -191,10 +172,6 @@ export async function POST(request: NextRequest) {
         adminRole: {
           id: createdAdminRole._id.toString(),
           name: createdAdminRole.name
-        },
-        userRole: {
-          id: createdUserRole._id.toString(),
-          name: createdUserRole.name
         }
       };
 
