@@ -1,13 +1,30 @@
 "use client"
 import { useForm } from "react-hook-form"
 import { useState, useEffect, JSX } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios"
+import qs from "query-string"
 
 import { useModal } from "@/hooks/use-model-store"
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 
 import { UserAvatar } from "../UserAvatar";
-import { ShieldAlert, ShieldCheck, Crown } from "lucide-react";
+import { ShieldAlert, ShieldCheck, Crown, MoreVertical, ShieldQuestion, Shield, Check, Gavel, Loader2 } from "lucide-react";
+
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
+} from "@/components/ui/dropdown-menu"
+import { set } from "mongoose";
 
 // Define the role icon mapping based on role names
 const roleIconMap: Record<string, JSX.Element> = {
@@ -15,12 +32,9 @@ const roleIconMap: Record<string, JSX.Element> = {
   "Admin": <ShieldCheck className="h-4 w-4 ml-2 text-red-500" />,
   "Owner": <Crown className="h-4 w-4 ml-2 text-yellow-500" />,
   "Moderator": <ShieldCheck className="h-4 w-4 ml-2 text-green-500" />,
+  "Guest": <Shield className="h-4 w-4 ml-2 text-gray-500" />
 };
 
-type Inputs = {
-  name: string;
-  imageUrl: string;
-}
 
 type Member = {
   user: {
@@ -46,27 +60,46 @@ type ServerRole = {
 };
 
 export default function MembersModal() {
+  const router = useRouter()
   const [members, setMembers] = useState<Member[]>([]);
   const [serverRoles, setServerRoles] = useState<ServerRole[]>([]);
   const [loadingId, setLoadingId] = useState("")
-  const { isOpen, onClose, type, data } = useModal();
+  const { isOpen, onClose, onOpen, type, data } = useModal();
   const { server } = data;
 
   const isModalOpen = isOpen && type === "members";
 
+  const onRoleChange = async (memberId: string, role: string) => {
+    try {
+      console.log(memberId, role)
+      setLoadingId(memberId);
+      const url = `/api/admin/member/${memberId}`;
+      const query = qs.stringify({ role }, { skipNull: true });
+      const serverId = server?._id || data?.server?._id;
 
+      const response = await axios.patch(url, { role, serverId });
+      console.log(response.data)
+      router.refresh();
+      onOpen("members", { server });
 
-  const form = useForm<Inputs>();
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setLoadingId("")
+    }
+  }
 
   useEffect(() => {
     const fetchData = async () => {
       if (!server?._id) return;
 
       try {
+        console.log(server._id)
         const memberResponse = await axios.get(`/api/admin/server/${server._id}/members`);
         setMembers(memberResponse.data.members || []);
 
         const rolesResponse = await axios.get(`/api/admin/server/${server._id}/role`);
+        console.log(rolesResponse.data.serverRole)
         // Make sure we're extracting the right data structure
         setServerRoles(rolesResponse.data.serverRole || []);
         console.log("Server roles:", rolesResponse.data.serverRole);
@@ -87,28 +120,36 @@ export default function MembersModal() {
     return serverRoles.filter(role => role.user === userId);
   };
 
-  // Function to get a role's icon
+  // Function to check if a user has a specific role
+  const hasRole = (userId: string, roleName: string) => {
+    return serverRoles.some(role => role.user === userId && role.name === roleName);
+  };
 
-const getRoleIcon = (roleName: string) => {
-  // Try direct match first
-  if (roleIconMap[roleName]) {
-    return roleIconMap[roleName];
-  }
-  
-  // Try case-insensitive match
-  const normalizedName = roleName.toLowerCase();
-  for (const key in roleIconMap) {
-    if (key.toLowerCase() === normalizedName) {
-      return roleIconMap[key];
+  // Function to get a role's icon
+  const getRoleIcon = (roleName: string) => {
+    // Try direct match first
+    if (roleIconMap[roleName]) {
+      return roleIconMap[roleName];
     }
-  }
-  
-  return null;
-};
+
+    // Try case-insensitive match
+    const normalizedName = roleName.toLowerCase();
+    for (const key in roleIconMap) {
+      if (key.toLowerCase() === normalizedName) {
+        return roleIconMap[key];
+      }
+    }
+
+    return null;
+  };
 
   const handleClose = () => {
-    form.reset();
     onClose();
+  };
+
+  // Check if a member is the server owner
+  const isServerOwner = (memberId: string) => {
+    return server?.owner?.toString() === memberId;
   };
 
   if (!isModalOpen) return null;
@@ -142,38 +183,82 @@ const getRoleIcon = (roleName: string) => {
           <ScrollArea className="mt-8 max-h-[420px] pr-6">
             {members.map((member) => {
               const userRoles = getUserRoles(member.user._id);
-              
+              const isOwner = isServerOwner(member.user._id);
+
               return (
                 <div key={member._id} className="flex items-center gap-x-2 mb-6">
-                  <UserAvatar 
-                    src={member.user.avatar} 
-                    name={member.user.username} 
-                    className="object-cover rounded-full h-10 w-10" 
+                  <UserAvatar
+                    src={member.user.avatar}
+                    name={member.user.username}
+                    className="object-cover rounded-full h-10 w-10"
                   />
 
                   <div className="flex flex-col gap-y-1">
                     <div className="text-sm font-semibold flex items-center">
                       {member.user.username}
-                      
+
                       {/* Display roles for this user */}
                       {userRoles.map((role) => (
-                        console.log(role.name),
-                        console.log(getRoleIcon(role.name)),
                         <span key={role._id} style={{ color: role.color || undefined }} className="flex items-center">
-                          
                           {getRoleIcon(role.name) || (
                             <span className="ml-2 text-xs">{role.name}</span>
                           )}
                         </span>
                       ))}
+
+                      {/* Show Crown icon for server owner */}
+                      {isOwner && (
+                        <Crown className="h-4 w-4 ml-2 text-yellow-500" />
+                      )}
                     </div>
                     <p className="text-xs text-zinc-500">
-                    {member.user.email}
+                      {member.user.email}
                     </p>
-                    
+
                   </div>
-                  {server?.owner === member.user._id && (
-                    <span className="text-xs text-yellow-500 ml-auto">Owner</span>
+                  {/* Only show dropdown menu if user is not the server owner */}
+                  {server?.members?.some((id) => id.user === member.user._id) && !isOwner && (
+                    <div className="ml-auto">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger>
+                          <MoreVertical className="h-4 w-4 text-zinc-500" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent side="left" >
+                          <DropdownMenuSub>
+                            <DropdownMenuSubTrigger className="flex items-center">
+                              <ShieldQuestion className="w-4 h-4 mr-2" />
+                              <span>Role</span>
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                              <DropdownMenuSubContent>
+                                <DropdownMenuItem onClick={() => onRoleChange(member._id, "Guest")}>
+                                  <Shield className="h-4 w-4 mr-2" />
+                                  Guest
+                                  {hasRole(member._id, "Guest") && (
+                                    <Check className="h-4 w-4 ml-auto text-green-500" />
+                                  )}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => onRoleChange(member._id, "Moderator")}>
+                                  <Shield className="h-4 w-4 mr-2" />
+                                  Moderator
+                                  {hasRole(member._id, "Moderator") && (
+                                    <Check className="h-4 w-4 ml-auto text-green-500" />
+                                  )}
+                                </DropdownMenuItem>
+                              </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuSub>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>
+                            <Gavel className="h-4 w-4 mr-2" />
+                            Kick
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
+                  {loadingId === member._id && (
+                    <Loader2 className="animate-spin h-4 w-4 ml-auto text-gray-500" />
                   )}
                 </div>
               );
