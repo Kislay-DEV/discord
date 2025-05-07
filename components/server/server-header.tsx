@@ -104,8 +104,9 @@ export const ServerHeader = () => {
         <Users className="h-4 w-4 ml-auto"/>
       </DropdownMenuItem>
     )}
-    {everyoneRole &&(
-      <DropdownMenuItem className=" px-3 py-3 text-sm cursor-pointer">
+    {adminRole &&(
+      <DropdownMenuItem
+      onClick={()=>onOpen("createChannel", {server})} className=" px-3 py-3 text-sm cursor-pointer">
         Create Channel
         <PlusCircle className="h-4 w-4 ml-auto"/>
       </DropdownMenuItem>

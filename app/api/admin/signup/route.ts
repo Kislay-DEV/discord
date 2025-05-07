@@ -54,7 +54,7 @@ export async function POST(request: Request) {
         
         // Generate JWT token with expiration
         const token = jwt.sign(tokenDetails, process.env.JWT_SECRET!, {
-            expiresIn: '1h' // Add token expiration
+            expiresIn: '1d' // Add token expiration
         });
 
         // Set cookie with the actual JWT token (not user details)

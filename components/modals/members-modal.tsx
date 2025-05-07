@@ -103,6 +103,7 @@ export default function MembersModal() {
         // Make sure we're extracting the right data structure
         setServerRoles(rolesResponse.data.serverRole || []);
         console.log("Server roles:", rolesResponse.data.serverRole);
+        onOpen("members", { server });
       } catch (error) {
         console.error("Error fetching data:", error);
         setMembers([]);
@@ -142,6 +143,22 @@ export default function MembersModal() {
 
     return null;
   };
+
+
+  const onKick = async (memberId: string) => {
+    try {
+      setLoadingId(memberId)
+      const url = `/api/admin/member/${memberId}`;
+      const serverId = server?._id || data?.server?._id;
+      const response = await axios.delete(url, { data: { serverId } });
+      router.refresh();
+      onOpen("members", { server:response.data.server });
+    } catch (error) {
+      console.error("Error kicking member:", error);
+    } finally {
+      setLoadingId("")
+    }
+  }
 
   const handleClose = () => {
     onClose();
@@ -249,7 +266,7 @@ export default function MembersModal() {
                             </DropdownMenuPortal>
                           </DropdownMenuSub>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={()=>onKick(member._id)} className="text-red-500">
                             <Gavel className="h-4 w-4 mr-2" />
                             Kick
                           </DropdownMenuItem>

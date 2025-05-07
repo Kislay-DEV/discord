@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import Role from "@/models/Role.model";
 import {connect} from "@/lib/DB_Connect";
+import Server from "@/models/Server.model";
 
 export async function PATCH(request: NextRequest, { params }: { params: { memberId: string } }) {
   const { memberId } = params;
@@ -67,8 +68,13 @@ export async function PATCH(request: NextRequest, { params }: { params: { member
       if (!updatedRole) {
         return NextResponse.json({ error: "Role not found" }, { status: 404 });
       }
+
+      const server = await Server.findById(serverId);
+      if (!server) {
+        return NextResponse.json({ error: "Server not found" }, { status: 404 });
+      }
       
-      return NextResponse.json(updatedRole, { status: 200 });
+      return NextResponse.json(server, { status: 200 });
     }
     
     return NextResponse.json({ error: "Invalid role data" }, { status: 400 });
@@ -84,4 +90,48 @@ export async function PATCH(request: NextRequest, { params }: { params: { member
 
 export async function OPTIONS() {
   return NextResponse.json({}, { status: 200 });
+}
+
+
+
+
+
+
+export async function DELETE(request: NextRequest, { params }: { params: { memberId: string } }) {
+  const { memberId } = params;
+  try {
+    await connect();
+    const body = await request.json();
+    const { serverId } = body;
+
+    if (!serverId) {
+      return NextResponse.json({ error: "Server ID is required" }, { status: 400 });
+    }
+
+    const server = await Server.findById(serverId);
+    if (!server) {
+      return NextResponse.json({ error: "Server not found" }, { status: 404 });
+    }
+    
+    // Remove the member from the array
+    server.members = server.members.filter(
+      (member: { _id: string }) => member._id.toString() !== memberId
+    );
+    
+    // Defensive: Remove invites missing creator (optional, for your previous error)
+    if (server.invites && server.invites.length > 0) {
+      server.invites = server.invites.filter((invite: { creator: string }) => invite.creator);
+    }
+    
+    await server.save();
+    
+    // Optionally, remove all roles for this user in this server
+    await Role.deleteMany({ user: memberId, server: serverId });
+    
+    return NextResponse.json(server, { status: 200 });
+
+  } catch (error) {
+    console.error("Error kicking member:", error);
+    return NextResponse.json({ error: "Failed to kick member" }, { status: 500 });
+  }
 }

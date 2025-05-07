@@ -68,8 +68,7 @@ const InviteSchema = new Schema({
   },
   creator: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: 'User'
   },
   uses: {
     type: Number,
