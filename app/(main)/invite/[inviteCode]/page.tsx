@@ -23,7 +23,7 @@ const InviteCodePage = ({
   }, [inviteCode])
 
   return (
-    <div>
+    <div className=''>
       Hello Invite
     </div>
   )

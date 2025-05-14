@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input";
 import File from "@/components/file-upload";
+import { Avatar } from "@radix-ui/react-avatar"
 
 type Inputs = {
   Avatar:"";
@@ -96,10 +97,10 @@ export default function App() {
 
                 
 
-                <div className="pt-4 flex justify-end">
+                <div className="pt-4 flex justify-end ">
                   <Button
                     type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white w-[396px] "
+                    className="bg-indigo-600  hover:bg-indigo-700 text-white w-[396px] "
                   >
                     Update Avatar
                   </Button>
@@ -109,6 +110,9 @@ export default function App() {
           </div>
         </div>
       )}
+      <Avatar
+      className="flex h-18 w-18 border-4 border-blue-500 rounded-full"
+      />
     </>
   );
 }

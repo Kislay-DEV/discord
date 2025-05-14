@@ -2,10 +2,25 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { ServerHeader } from "./server-header";
+import { ScrollArea } from "@radix-ui/react-scroll-area";
+import { ServerSearch } from "./server-search";
+import { Hash, Mic, Video } from "lucide-react";
 
 interface ServerSidebarProps {
   serverId: string;
   baseUrl: string;
+}
+
+const IconMaps = {
+  text: <Hash className="mr-2 h-4 w-4" />,
+  audio: <Mic className="mr-2 h-4 w-4" />,
+  video: <Video className="mr-2 h-4 w-4" />,
+}
+
+const roleIconMap = {
+  Admin: <span className="text-green-500">Admin</span>,
+  Member: <span className="text-blue-500">Member</span>,
+  Guest: <span className="text-gray-500">Guest</span>,
 }
 
 export const ServerSidebar: React.FC<ServerSidebarProps> = ({ serverId, baseUrl }) => {
@@ -53,30 +68,41 @@ export const ServerSidebar: React.FC<ServerSidebarProps> = ({ serverId, baseUrl 
   const members = serverData.server.members.filter(
     (member: any) => serverData.profile && member.profileId !== serverData.profile.id
   );
-  
+
   // Find user's role - look for the Admin role in user's roles
-  const userRole = serverData.profile ? 
+  const userRole = serverData.profile ?
     serverData.server.members.find(
       (member: any) => member.user === serverData.profile.id ||
-                      member.profileId === serverData.profile.id
+        member.profileId === serverData.profile.id
     ) : null;
-    
+
   const userRoleIds = userRole?.roles || [];
-  
+
   // Get all actual role objects
   const allRoles = serverData.roles || [];
-  
+
   // Find the admin role from the user's assigned roles
-  const adminRole = allRoles.find((role: any) => 
+  const adminRole = allRoles.find((role: any) =>
     userRoleIds.includes(role._id) && role.name === "Admin"
   );
-  
+
   return (
     <div>
-     
-      <ServerHeader 
-        server={serverData.server}
+
+      <ServerHeader
+        servers={serverData.server}
         role={adminRole}
+      />
+      <ScrollArea className="h-full w-full" />
+      <ServerSearch
+        data={[
+          {
+            label: "Text Channel",
+            type: "channel",
+            data: textChannels?.map((channel)=>{
+            })
+          }
+        ]}
       />
     </div>
   );
